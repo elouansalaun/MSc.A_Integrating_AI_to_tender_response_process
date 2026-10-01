@@ -1,0 +1,5 @@
+#all figures in the figures folder
+figures/*
+
+#all md files in the docs folder
+docs/*.md
