@@ -30,21 +30,21 @@ Industry partner: a services company that wins most of its contracts through pub
 ## The problem
 
 - Bid/no-bid and pricing decisions relied mostly on **managers' intuition and experience**.
-- Useful data existed but went **mostly unused**: public tender results (SEAO, the Quebec government's tendering platform), internal history and long, unstructured PDF specifications.
+- Useful data existed but went **mostly unused** and **dispersed**: public tender results (SEAO, the Quebec government's tendering platform), internal history and long, unstructured PDF specifications.
 - The research gap: the literature does not cover **text extraction, contract similarity and bid pricing combined in one tool**, and has nothing on the security services sector.
 
 ## What I built: a five-module tool in Python
 
 | # | Module | What it does | Key technologies |
 |---|---|---|---|
-| 1 | **Prospecting and anticipation** | Daily scraping of open tenders; links each one to its past versions (renewals); predicts upcoming republications | Selenium web scraping, UNSPSC filtering, entity resolution (rules + Levenshtein + SequenceMatcher + Soundex) |
+| 1 | **Prospecting and anticipation** | Daily scraping of open tenders; links each one to its past versions (renewals); predicts upcoming republications | Selenium web scraping, UNSPSC filtering, entity resolution (rules + Levenshtein + SequenceMatcher + Soundex), Internal docs (spreadsheets, notes) formatting|
 | 2 | **Contract PDF extraction (RAG)** | Reads specifications and extracts the bidder's resource needs (uniforms, equipment, vehicles), then turns them into cost scores | **Hierarchical RAG**: PyMuPDF layout parsing, section-based chunking, sparse embeddings with domain vocabulary, **BM25 + hierarchy RAG**, **local LLM** (Ministral-3-14B-Instruct, quantized GGUF), spaCy cost matching |
 | 3 | **Contract similarity** | Finds the past contracts most similar to the one under study | Distance per feature (custom matrices, Jaccard, time decay), small neural network **fine-tuned on ~300 expert rankings** (learning from human feedback, **RankNet** / Bradley-Terry loss) |
 | 4 | **Pricing model** | Recommends the highest margin that still wins, based on similar contracts and recent market trends | **Learning to Rank with XGBoost (XGBRanker)** over a grid of candidate margins, market-adjusted features, chronological leave-one-out validation |
 | 5 | **Decision dashboard** | Shows all indicators to managers: history, competitor profiles, margin trends and the recommendation | **Streamlit**, deployed with **Docker on Azure** (Azure Data Lake Storage Gen2, daily and weekly data refresh) |
 
 **Design choices that mattered**
-- **Data scarcity** (about 120 usable tenders) ruled out deep models. Framing pricing as a *ranking* problem instead of a regression made better use of the small dataset and captured the asymmetric goal: the highest bid that still wins.
+- **Tender type** Framing pricing as a *ranking* problem instead of a regression made better use of the dataset and captured the asymmetric goal: the highest bid that still wins.
 - A **local, lightweight LLM** keeps confidential contract documents inside the company.
 - **Sparse, domain-specific retrieval** beat standard dense embeddings on technical security vocabulary and reduced LLM hallucinations.
 - The tool is **human-in-the-loop**: it supports managers' decisions and does not automate them.
